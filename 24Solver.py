@@ -1,120 +1,124 @@
 # Program 24 Solver
 # Mencari solusi game 24
-from itertools import permutations
+from sympy.utilities.iterables import multiset_permutations
 
 # operator
 def operate(val1,op,val2):
     if val2 == 0:
-        return -999
+        return -99999999
     
     hasil = 0
     if op == '+':
         hasil = val1+val2
     elif op == '-':
         hasil = val1-val2
-    elif op == '*':
+    elif op == '×':
         hasil = val1*val2
-    elif op == '/':
+    elif op == '÷':
         hasil = val1/val2
     return hasil
 
 # COUNT VALUE
 def countValue1(pk,po):
-    
-    val = operate(pk[0],po[0],pk[1])
-    val = operate(val,po[1],pk[2])
-    val = operate(val,po[2],pk[3])
-    return val
+    # 1, 2, 3
+    valAB = operate(pk[0],po[0],pk[1])
+    valABC = operate(valAB,po[1],pk[2])
+    valABCD = operate(valABC,po[2],pk[3])
+    return valABCD
 
 def countValue2(pk,po):
-    
-    val1 = pk[0]
- 
-    val2 = operate(pk[1],po[1],pk[2])
-    val2 = operate(val2,po[2],pk[3])
+    # 1, 3, 2 dan 3, 1, 2
+    valAB = operate(pk[0],po[0],pk[1])
+    valCD = operate(pk[2],po[2],pk[3])
+    valABCD = operate(valAB,po[1],valCD)
 
-    val = operate(val1,po[0],val2)
-    return val
+    return valABCD
 
 def countValue3(pk,po):
-    val1 = operate(pk[0],po[0],pk[1])
-    val2 = operate(pk[2],po[2],pk[3])
+    # 2, 1, 3
+    valBC = operate(pk[1],po[1],pk[2])
+    valABC = operate(pk[0],po[0],valBC)
+    valABCD = operate(valABC,po[2],pk[3])
 
-    val = operate(val1,po[1],val2)
-    return val
+    return valABCD
 
 def countValue4(pk,po):
-    val1 = pk[0]
-    val2 = operate(pk[1],po[1],pk[2])
-    val3 = pk[3]
+    # 2, 3, 1
+    valBC = operate(pk[1],po[1],pk[2])
+    valBCD = operate(valBC,po[2],pk[3])
+    valABCD = operate(pk[0],po[0],valBCD)
 
-    val12 = operate(val1,po[0],val2)
-    val123 = operate(val12,po[0],val3)
+    return valABCD
 
-    return val123
+def countValue5(pk,po):
+    # 2, 3, 1
+    valCD = operate(pk[2],po[2],pk[3])
+    valBCD = operate(pk[1],po[1],valCD)
+    valABCD = operate(pk[0],po[0],valBCD)
+
+    return valABCD
 
 # Print Jawaban
 def printSolution(pk,po,kode):
 
+    out = -999
     if kode == 1:
-        print(pk[0],po[0],pk[1],po[1],pk[2],po[2],pk[3],"= 24")
+        out = "((( {} {} {} ) {} {} ) {} {} ) = 24".format(pk[0],po[0],pk[1],po[1],pk[2],po[2],pk[3])
     
     elif kode == 2:
-        print(pk[0],po[0],"(",pk[1],po[1],pk[2],po[2],pk[3],") = 24")
-        
+        out = "(( {} {} {} ) {} ( {} {} {} )) = 24".format(pk[0],po[0],pk[1],po[1],pk[2],po[2],pk[3])
+
     elif kode == 3:
-        print("(",pk[0],po[0],pk[1],")",po[1],"(",pk[2],po[2],pk[3],") = 24")
-    
+        out = "(( {} {} ( {} {} {} )) {} {} ) = 24".format(pk[0],po[0],pk[1],po[1],pk[2],po[2],pk[3])
+
     elif kode == 4:
-        print(pk[0],po[0],"(",pk[1],po[1],pk[2],")",po[2],pk[3],"= 24")
+        out = "( {} {} (( {} {} {} ) {} {} )) = 24".format(pk[0],po[0],pk[1],po[1],pk[2],po[2],pk[3])
+    
+    elif kode == 5:
+        out = "( {} {} ( {} {} ( {} {} {} ))) = 24".format(pk[0],po[0],pk[1],po[1],pk[2],po[2],pk[3])
+    
+    return out
 
 def main():
 
-    # a = [1,2,3,4] ; b=['+','-','*']
-    # print(countValue1(a,b)) # 0
-    # print(countValue2(a,b)) # -3
-    # print(countValue3(a,b)) # -10
-    # print(countValue4(a,b)) # 0
-
+    # permutasi semua kartu
     kartu = [(int(input("Kartu"+" "+str(i+1)+" : "))) for i in range(4)]
-    allKartu1 = permutations(kartu)
-    allKartu = []
-    for p in allKartu1:
-        allKartu.append(p)
+    permKartu = list(multiset_permutations(kartu))
 
-    operator = ['+','-','*','/','+','-','*','/','+','-','*','/']
-    allOperator1 = permutations(operator,3)
+    # permutasi semua operasi hitung
+    op = ['+','+','+','-','-','-','×','×','×','÷','÷','÷']
+    permOp = list(multiset_permutations(op,3))
 
-    allOperator = []
-    for p in allOperator1:
-        allOperator.append(p)
+    # himpunan solusi
+    himpunan_solusi = []
+    jumlah_tes = 0
+    # menghitung nilai semua permutasi (angka, operasi hitung, kurung)
+    for i in range(len(permKartu)):
+        current_kartu = permKartu[i]
+        for j in range(len(permOp)):
+            current_op = permOp[j]
+            jumlah_tes += 5
+            if countValue1(current_kartu,current_op) == 24:
+                himpunan_solusi.append(printSolution(current_kartu,current_op,1))
 
-    solusi1 = []
-    solusi2 = []
-    solusi3 = []
-    solusi4 = []
+            if countValue2(current_kartu,current_op) == 24:
+                himpunan_solusi.append(printSolution(current_kartu,current_op,2))
 
-    for i in range(len(allKartu)):
-        pkartu = allKartu[i]
-        for j in range(len(allOperator)):
-            pop = allOperator[j]
-            if pkartu+pop not in solusi1:
-                if countValue1(pkartu,pop) == 24:
-                    printSolution(pkartu,pop,1)
-                    solusi1.append(pkartu+pop)
-            if pkartu+pop not in solusi2:
-                if countValue2(pkartu,pop) == 24:
-                    printSolution(pkartu,pop,2)
-                    solusi2.append(pkartu+pop)
-            if pkartu+pop not in solusi3:
-                if countValue3(pkartu,pop) == 24:
-                    printSolution(pkartu,pop,3)
-                    solusi3.append(pkartu+pop)
-            if pkartu+pop not in solusi4:
-                if countValue4(pkartu,pop) == 24:
-                    printSolution(pkartu,pop,4)
-                    solusi4.append(pkartu+pop)
+            if countValue3(current_kartu,current_op) == 24:
+                himpunan_solusi.append(printSolution(current_kartu,current_op,3))
 
-    if len(solusi1+solusi2+solusi3+solusi4) == 0:
+            if countValue4(current_kartu,current_op) == 24:
+                himpunan_solusi.append(printSolution(current_kartu,current_op,4))
+
+            if countValue5(current_kartu,current_op) == 24:
+                himpunan_solusi.append(printSolution(current_kartu,current_op,5))
+    
+    if len(himpunan_solusi) == 0:
         print("Tidak ada solusi.")
+    else:
+        print("{} solusi ditemukan :".format(len(himpunan_solusi)))
+        for solusi in himpunan_solusi:
+            print(solusi)
+        
+    print("{} permutasi dicoba.".format(jumlah_tes))
 main()
